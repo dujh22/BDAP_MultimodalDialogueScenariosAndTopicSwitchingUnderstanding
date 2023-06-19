@@ -1,30 +1,86 @@
-# BDAP_MultimodalDialogueScenariosAndTopicSwitchingUnderstanding
-给定视频和对话，利用深度学习相关技术，建立稳健的对话场景切换和对话话题切换判断模型。
+# 多模态对话场景与话题切换
 
-## 1.项目构成
+## 数据集
 
-| 名称                   | 用途                                                         |
-| ---------------------- | ------------------------------------------------------------ |
-| process_data文件夹     | 数据集，本项目待处理的源数据                                 |
-| process_data.py        | 代码，用于文本预处理                                         |
-| bert.py                | 代码，采用模型BERT                                           |
+### 统计数据
 
-## 2.评价指标
+|       | 剪辑    | 话语      | 场景     | 话题     |
+| ----- |-------|---------|--------|--------|
+| train | 8,025 | 200,073 | 11,440 | 20,996 |
+| valid | 416   | 10,532  | 615    | 1,270  |
+| test  | 403   | 10,260  | -      | -      |
 
-## 3.实际效果
+### 环境配置
 
-| 排名 | 最终得分FinalScore | 相对准确率Score | 绝对准确率ExtAcc | 提交次数 |
-| ---- | ------------------ | --------------- | ---------------- | -------- |
-| 1    | 0.8433             | 0.9487          | 0.5975           | 32       |
-| 2    | 0.8344             | 0.9420          | 0.5834           | 35       |
-| 3    | 0.8343             | 0.9495          | 0.5655           | 23       |
-| Our  | 0.7909             | 0.9098          | 5134             | 3        |
+请按照requirements.txt文件进行配置，其中可以参考的部分有：
 
-## 4.相关贡献
+python 3.7
 
-| 序     | 名   | 算法/模型分工             | 项目分工                           |
-| ------ | ---- | ------------------------- | ---------------------------------- |
-| leader | 杜晋华  | BERT | 研究框架、赛题分析、优化思考、汇总 |
-| 2      | 李鹏飞  | BERT | 数据分析与预处理                   |
-| 3      | 赵熠扬  | BERT | 算法设计                           |
-| 4      | 黄润泽  | BERT | 结果分析                           |
+pip install packaging==21.3
+
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pytorch-ignite
+
+pip install transformers==4.29.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+### 参数修改
+
+在核心的运行代码run.py中，为了适配您的GPU硬件环境，请修改以下内容：
+
+parser.add_argument("--device", type=str, default="cuda:0   # 从cuda改为自己机器的情况
+
+### 指令
+
+```python
+python run.py \
+--train_path inputs/preprocessed/MDSS_train.json \
+--valid_path inputs/preprocessed/MDSS_valid.json \
+--test_path inputs/preprocessed/MDSS_test.json \
+--train_batch_size 8 \
+--lr 1e-5 \
+--gradient_accumulation_steps 2\
+--model_checkpoint bert-base-uncased \
+--ft 1 \ # 1: fitune 0: train from scratch
+--exp_set _baseline \
+--video 0 \ # 0: session identification 1: scene identification
+--gpuid 0 \
+--test_each_epoch 1 \ # test for each epoch
+
+```
+注意去掉指令中的注释，如下：
+```python
+python run.py \
+--train_path inputs/preprocessed/MDSS_train.json \
+--valid_path inputs/preprocessed/MDSS_valid.json \
+--test_path inputs/preprocessed/MDSS_test.json \
+--train_batch_size 8 \
+--lr 1e-5 \
+--gradient_accumulation_steps 2 \
+--model_checkpoint bert-base-uncased \
+--ft 1 \ 
+--exp_set _baseline \
+--video 0 \ 
+--gpuid 0 \
+--test_each_epoch 1 
+```
+### 结果
+
+| Task         | F1    |
+| ------------ | ----- |
+| 场景切换辨别 | 35.40 |
+| 话题切换辨别 | 42.15 |
+
+### 说明
+
+项目仅展示了核心代码（可运行），删除了几乎全部的中间文件、结果文件和依赖文件，请对于依赖文件自行补充到文件结构中。
+
+- bert-base-uncased：https://huggingface.co/bert-base-uncased/tree/main
+- 视频特征可以从 https://pan.baidu.com/s/1pMKGY6Vkiy7N3YzD041nQA?pwd=9n53下载，将特征集合解压到 inputs/features/resnet，同理fast_rcnn
+
+### 相关贡献
+
+| 序     | 名   | 算法/模型分工       | 项目分工                      |
+| ------ |-----|---------------|---------------------------|
+| leader | DJH | BERTology、多模态 | 研究框架、赛题分析、优化思考、算法设计与实现、汇总 |
+| 2      | LPF | faster-rcnn   | 赛题分析、算法设计与实现                   |
+| 3      | ZYY | ResNet        | 算法设计与实现、优化思考                   |
+| 4      | HRZ | 二分类           | 算法设计与实现                   |
